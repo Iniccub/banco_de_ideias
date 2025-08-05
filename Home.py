@@ -99,15 +99,8 @@ def inicializar_sessao():
 def main():
     inicializar_sessao()
     
-    # Criando layout com colunas para posicionar a logo ao lado do header e texto
-    col1, col2 = st.columns([1, 3])
-    
-    with col1:
-        st.image("LOGO BIP.png", width=200)
-    
-    with col2:
-        st.header("BANCO DE IDEIAS e BOAS PRÁTICAS - REDE LIUS AGOSTINIANOS", divider="blue")
-        st.write("""Ferramenta de registro e acompanhamento de ideias sobre a gestão financeira da Rede Lius""")
+    st.header("BANCO DE IDEIAS e BOAS PRÁTICAS - REDE LIUS", divider="orange")
+    st.write("""Ferramenta de registro e acompanhamento de ideias e boas práticas institucionais da Rede Lius""")
     
     # Sidebar com opções de identificação
     with st.sidebar:
@@ -121,7 +114,7 @@ def main():
 # Função para criar a sidebar
 def criar_sidebar():
     
-    st.image("rede lius.png", width=230)
+    st.image("1_LOGO BIP.png", width=230)
     
     st.header("Opções")
     
@@ -134,28 +127,15 @@ def criar_sidebar():
         on_change=lambda: st.session_state.update(anonimato_checkbox=st.session_state.anonimato_checkbox)
     )
     
-    # Lista de colaboradores
-    colaboradores = [
-        "Felipe Martins Buccini",
-        "Fábio Viana",
-        "Thiago Alves Moreira",
-        "Mauro Peres Macedo",
-        "Jaqueline Fonseca",
-        "Fabricio Martins",
-        "Karla Camargos",
-        "Julliana Bertoni",
-        "Juliana Casagrande",
-        "Sonia Cristina"
-    ]
-    
-    # Selectbox para escolha do colaborador
-    colaborador = st.selectbox(
-        "Escolha seu nome:",
-        colaboradores,
-        index=None,
-        disabled=st.session_state.get("anonimato_checkbox", False),  # Pega o valor atualizado
-        key="colaborador_select"
+    # Nome do colaborador. Caso o checkbox "NÃO quero me identificar" esteja marcado, desabilitar este campo
+    colaboradores = st.text_input(
+        "Informe seu nome completo", 
+        value=st.session_state.get("colaboradores", ""),
+        key="colaboradores",
+        disabled=st.session_state.anonimato_checkbox
     )
+    
+    colaborador = colaboradores
     
     # Unidades disponíveis
     unidades = [
@@ -163,7 +143,13 @@ def criar_sidebar():
         "CSA - CTG",
         "CSA - NL",
         "CSA - GZ",
-        "CSA - DV"
+        "CSA - DV",
+        "EPSA",
+        "ESA",
+        "AIACOM",
+        "ADEODATO",
+        "SIC - SEDE",
+        "PROVÍNCIA AGOSTINIANA"
     ]
     
     # Selectbox para escolha da unidade
@@ -244,7 +230,7 @@ def criar_formulario_ideia():
 def processar_salvamento():
     # Obter valores atuais dos campos
     anonimato = st.session_state.anonimato_checkbox
-    colaborador = st.session_state.colaborador_select
+    colaborador = st.session_state.colaboradores
     unidade = st.session_state.unidade_select
     categoria = st.session_state.categoria_select
     ideia = st.session_state.ideia_textarea
