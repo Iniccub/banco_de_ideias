@@ -16,12 +16,12 @@ def limpar_campos():
     # Resetar todos os campos do formulário
     st.session_state.anonimato_checkbox = False
     st.session_state.colaborador_select = None
-    st.session_state.unidade_select = None
+    t.session_state.unidade_select = None
     st.session_state.categoria_select = None
-    st.session_state.ideia_textarea = ""
+    t.session_state.ideia_textarea = ""
     
     # Exibir mensagem de confirmação
-    st.toast("Todos os campos foram limpos com sucesso!", icon="✅")
+    t.toast("Todos os campos foram limpos com sucesso!", icon="✅")
 
 # Função para exibir diálogo de confirmação antes de limpar
 def confirmar_limpeza():
@@ -167,20 +167,23 @@ def criar_sidebar():
         st.info("Seu nome e sua unidade serão registrados no cadastro da ideia!")
     
     # Botão para limpar campos com estilo e ícone
-    st.button(
-        "🗑️ Limpar campos", 
-        on_click=confirmar_limpeza, 
-        key='limpar_campos',
-        help="Clique para limpar todos os campos do formulário"
-    )
+    #st.button(
+        #"🗑️ Limpar campos", 
+        #on_click=confirmar_limpeza, 
+       # key='limpar_campos',
+        #help="Clique para limpar todos os campos do formulário"
+    #)
 
     st.write("---")
 
+    st.write("Status da conexão:")
+
+
     # Exibir status da conexão com SharePoint
     if st.session_state.get('sharepoint_conectado', False):
-        st.sidebar.success("✅ Conectado ao SharePoint - Suas ideias serão salvas automaticamente")
+        st.sidebar.success("✅ Conexão com o SharePoint feita com sucesso")
     else:
-        st.sidebar.warning("⚠️ Sem conexão com SharePoint - Suas ideias serão salvas apenas localmente")
+        st.sidebar.warning("⚠️ Sem conexão com SharePoint")
 
 # Função para criar o formulário principal
 def criar_formulario_ideia():
