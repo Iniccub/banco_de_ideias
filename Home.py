@@ -226,7 +226,7 @@ def criar_formulario_ideia():
             st.write(f"Você escreveu {caracteres} caracteres")
     
     # Botão para salvar a ideia
-    if st.button("Salvar ideia", type="primary", key="Salvar_ideia"):
+    if st.button("Enviar ideia", type="primary", key="Salvar_ideia"):
         processar_salvamento()
 
 # Função para processar o salvamento da ideia
