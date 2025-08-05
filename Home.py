@@ -191,7 +191,7 @@ def criar_formulario_ideia():
     categorias = [
         "Tecnologia & Inovação",
         "Currículo & Metodologia",
-        "Infraestrutura & Espaço físico",
+        "Infraestrutura & Espaço Físico",
         "Bem Estar & Cultura Escolar",
         "Eventos & Engajamento",
         "Gestão eficiênte de Custos",
