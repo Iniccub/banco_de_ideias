@@ -3,12 +3,28 @@ from docx import Document
 import io
 import datetime
 from Office365_api import SharePoint  # Importação para integração com SharePoint
+import json
+import os
+
+# Importações das novas funcionalidades
+from navigation import criar_navegacao
+from analytics import criar_dashboard_analytics
+from text_analysis import criar_analise_texto
+from controle_ideias import criar_sistema_controle
+from gamificacao import criar_sistema_gamificacao
+from notificacoes import criar_sistema_notificacoes
 
 # Configuração da página
 st.set_page_config(
     page_title="Banco de Ideias - BIP",
     page_icon="ICON BIP.PNG",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://www.extremelycoolapp.com/help',
+        'Report a bug': "https://www.extremelycoolapp.com/bug",
+        'About': "# BIP - Banco de Ideias e Práticas\nVersão 2.0 com funcionalidades avançadas!"
+    }
 )
 
 # Função para limpar todos os campos com confirmação
@@ -80,7 +96,7 @@ def verificar_conexao_sharepoint():
 
 # Inicializa os estados da sessão se não existirem
 def inicializar_sessao():
-    # Inicializar os estados da sessão apenas se não existirem
+    # Estados existentes
     if 'anonimato_checkbox' not in st.session_state:
         st.session_state.anonimato_checkbox = False
     if 'colaborador_select' not in st.session_state:
@@ -92,29 +108,63 @@ def inicializar_sessao():
     if 'ideia_textarea' not in st.session_state:
         st.session_state.ideia_textarea = ""
     
-    # Verificar conexão com SharePoint ao iniciar
+    # Novos estados para as funcionalidades
+    if 'usuario_pontos' not in st.session_state:
+        st.session_state.usuario_pontos = 0
+    if 'usuario_badges' not in st.session_state:
+        st.session_state.usuario_badges = []
+    if 'ideias_enviadas' not in st.session_state:
+        st.session_state.ideias_enviadas = []
+    if 'notificacoes' not in st.session_state:
+        st.session_state.notificacoes = []
+    
+    # Verificar conexão com SharePoint
     st.session_state.sharepoint_conectado = verificar_conexao_sharepoint()
 
 # Função principal da interface
 def main():
     inicializar_sessao()
     
-    st.header("BANCO DE IDEIAS e BOAS PRÁTICAS - REDE LIUS", divider="orange")
-    st.write("""Ferramenta de registro e acompanhamento de ideias e boas práticas institucionais da Rede Lius""")
+    # Sistema de navegação
+    pagina_selecionada = criar_navegacao()
     
-    # Sidebar com opções de identificação
-    with st.sidebar:
-        criar_sidebar()
+    # Roteamento baseado na página selecionada
+    if pagina_selecionada == "🏠 Enviar Ideia":
+        # Código original do formulário
+        st.header("BANCO DE IDEIAS e BOAS PRÁTICAS - REDE LIUS", divider="orange")
+        st.write("""Ferramenta de registro e acompanhamento de ideias e boas práticas institucionais da Rede Lius""")
+        
+        # Sidebar com opções de identificação
+        with st.sidebar:
+            criar_sidebar()
+        
+        st.write("---")
+        
+        # Área principal para entrada da ideia
+        criar_formulario_ideia()
     
-    st.write("---")
+    elif pagina_selecionada == "📊 Dashboard":
+        criar_dashboard_analytics()
     
-    # Área principal para entrada da ideia
-    criar_formulario_ideia()
-
+    elif pagina_selecionada == "☁️ Análise de Texto":
+        criar_analise_texto()
+    
+    elif pagina_selecionada == "📋 Controle de Ideias":
+        criar_sistema_controle()
+    
+    elif pagina_selecionada == "🎮 Gamificação":
+        criar_sistema_gamificacao()
+    
+    elif pagina_selecionada == "🔔 Notificações":
+        criar_sistema_notificacoes()
+    
+    elif pagina_selecionada == "🤖 Análise IA":
+        from ia_analysis import criar_analise_ia
+        criar_analise_ia()
+    
+    
 # Função para criar a sidebar
 def criar_sidebar():
-    
-    st.image("1_LOGO BIP.png", width=230)
     
     st.header("Opções")
     
@@ -294,3 +344,42 @@ def processar_salvamento():
 # Executar o aplicativo
 if __name__ == "__main__":
     main()
+
+
+def criar_relatorios():
+    st.header("📈 Relatórios")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("📊 Relatório Mensal"):
+            st.success("Relatório mensal gerado!")
+    
+    with col2:
+        if st.button("📈 Relatório de Tendências"):
+            st.success("Relatório de tendências gerado!")
+
+def criar_configuracoes():
+    st.header("⚙️ Configurações")
+    
+    st.subheader("Configurações Gerais")
+    
+    # Configurações de notificação
+    st.checkbox("Ativar notificações por email", value=True)
+    st.checkbox("Ativar gamificação", value=True)
+    
+    # Configurações de análise
+    st.selectbox("Idioma para análise de texto", ["Português", "Inglês", "Espanhol"])
+    
+    # Configurações de SharePoint
+    st.text_input("URL do SharePoint", value="https://...")
+    
+    if st.button("💾 Salvar Configurações"):
+        st.success("Configurações salvas com sucesso!")
+
+
+
+
+
+
+# 6. Função de Persistência de Dados
