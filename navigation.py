@@ -9,6 +9,7 @@ def criar_navegacao():
             "Navegação",
             [
                 "🏠 Enviar Ideia",
+                "📋 Listar Ideias",    # Nova opção
                 "📊 Dashboard",
                 "☁️ Análise de Texto",
                 "📋 Controle de Ideias",

@@ -5,6 +5,7 @@ import datetime
 from Office365_api import SharePoint  # Importação para integração com SharePoint
 import json
 import os
+import uuid  # Adicionar esta linha
 
 # Importações das novas funcionalidades
 from navigation import criar_navegacao
@@ -13,6 +14,8 @@ from text_analysis import criar_analise_texto
 from controle_ideias import criar_sistema_controle
 from gamificacao import criar_sistema_gamificacao
 from notificacoes import criar_sistema_notificacoes
+from cadastro_ideias import criar_formulario_ideia, listar_ideias
+from mongodb_connection import mongo_manager
 
 # Configuração da página
 st.set_page_config(
@@ -162,7 +165,18 @@ def main():
         from ia_analysis import criar_analise_ia
         criar_analise_ia()
     
-    
+    elif pagina_selecionada == "📋 Listar Ideias":
+        listar_ideias()  # Do cadastro_ideias.py
+        
+        st.write("---")
+        st.write("Status da conexão:")
+        
+        # Exibir status da conexão com SharePoint
+        if st.session_state.get('sharepoint_conectado', False):
+            st.sidebar.success("✅ Conexão com o SharePoint feita com sucesso")
+        else:
+            st.sidebar.warning("⚠️ Sem conexão com SharePoint")
+
 # Função para criar a sidebar
 def criar_sidebar():
     
@@ -312,8 +326,50 @@ def processar_salvamento():
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
     filename = f"Ideia_{categoria.replace(' ', '_').replace('&', 'e')}_{timestamp}.docx"
     
-    # Iniciar o processo de upload para o SharePoint com indicador de progresso
-    with st.spinner("Salvando ideia no SharePoint..."): 
+    # Preparar dados para MongoDB
+    import uuid
+    ideia_data = {
+        "id_unico": str(uuid.uuid4()),
+        "titulo": f"Ideia - {categoria}",
+        "autor": "Anônimo" if anonimato else colaborador,
+        "email": "",  # Pode ser adicionado ao formulário se necessário
+        "categoria": categoria,
+        "unidade": unidade,
+        "prioridade": "Média",  # Valor padrão
+        "impacto": "Médio",     # Valor padrão
+        "descricao": ideia,
+        "justificativa": "",
+        "recursos": "",
+        "beneficios": "",
+        "prazo_implementacao": "3-6 meses",  # Valor padrão
+        "orcamento_estimado": "R$ 1.000 - R$ 5.000",  # Valor padrão
+        "tags": [categoria.lower().replace(' ', '_')],
+        "status": "Pendente",
+        "votos": 0,
+        "comentarios": [],
+        "data_submissao": datetime.datetime.now().isoformat(),
+        "arquivo_sharepoint": filename,
+        "anonimo": anonimato
+    }
+    
+    # Variáveis para controlar o sucesso das operações
+    sharepoint_sucesso = False
+    mongodb_sucesso = False
+    
+    # 1. SALVAR NO MONGODB
+    with st.spinner("Salvando ideia no MongoDB..."):
+        try:
+            ideia_id = mongo_manager.salvar_ideia(ideia_data)
+            if ideia_id:
+                mongodb_sucesso = True
+                st.success(f"✅ Ideia salva no MongoDB! ID: {ideia_id}")
+            else:
+                st.error("❌ Erro ao salvar no MongoDB")
+        except Exception as e:
+            st.error(f"❌ Erro ao salvar no MongoDB: {str(e)}")
+    
+    # 2. SALVAR NO SHAREPOINT
+    with st.spinner("Salvando ideia no SharePoint..."):
         try:
             # Definir a pasta do SharePoint onde o arquivo será salvo
             sharepoint_folder = "Banco_de_Ideias"  # Pasta no SharePoint para armazenar as ideias
@@ -324,22 +380,47 @@ def processar_salvamento():
             
             # Verificar se o upload foi bem-sucedido
             if response:
-                st.success(f"Ideia salva com sucesso no SharePoint e disponível para download local!")
+                sharepoint_sucesso = True
+                st.success(f"✅ Ideia salva no SharePoint!")
             else:
-                st.warning("O arquivo foi gerado, mas não foi possível salvá-lo no SharePoint. Você ainda pode baixá-lo localmente.")
+                st.warning("⚠️ Não foi possível salvar no SharePoint")
         except Exception as e:
-            st.error(f"Erro ao salvar no SharePoint: {str(e)}. Você ainda pode baixar o arquivo localmente.")
+            st.error(f"❌ Erro ao salvar no SharePoint: {str(e)}")
     
-    # Oferecer o arquivo para download local
+    # 3. RESUMO DO SALVAMENTO
+    st.write("---")
+    st.subheader("📋 Resumo do Salvamento")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        if mongodb_sucesso:
+            st.success("✅ MongoDB: Salvo com sucesso")
+        else:
+            st.error("❌ MongoDB: Falha no salvamento")
+    
+    with col2:
+        if sharepoint_sucesso:
+            st.success("✅ SharePoint: Salvo com sucesso")
+        else:
+            st.error("❌ SharePoint: Falha no salvamento")
+    
+    # 4. OFERECER DOWNLOAD LOCAL
     st.download_button(
-        label="Baixar Ideia em Word",
+        label="📥 Baixar Ideia em Word",
         data=doc_bytes,
         file_name=filename,
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         key="download_ideia"
     )
     
-    st.success("Ideia salva com sucesso! Clique no botão acima para baixar o arquivo.")
+    # 5. MENSAGEM FINAL
+    if mongodb_sucesso and sharepoint_sucesso:
+        st.success("🎉 Ideia salva com sucesso em ambos os sistemas!")
+        st.balloons()
+    elif mongodb_sucesso or sharepoint_sucesso:
+        st.warning("⚠️ Ideia salva parcialmente. Verifique os detalhes acima.")
+    else:
+        st.error("❌ Falha ao salvar a ideia. Você ainda pode baixar o arquivo localmente.")
 
 # Executar o aplicativo
 if __name__ == "__main__":
@@ -382,4 +463,5 @@ def criar_configuracoes():
 
 
 
-# 6. Função de Persistência de Dados
+
+# REMOVER todo código duplicado e solto após esta linha
