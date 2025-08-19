@@ -44,11 +44,13 @@ class SharePoint:
         return root_folder.files
 
     def download_file(self, file_name, folder_name):
-        conn = self._auth()
-        # Corrigir o caminho para incluir o nome do arquivo
-        file_url = f'/sites/{sharepoint_site_name}/{sharepoint_doc}/{folder_name}/{file_name}'
-        file = File.open_binary(conn, file_url)
-        return file.content
+        try:
+            conn = self._auth()
+            file_url = f'/sites/{sharepoint_site_name}/{sharepoint_doc}/{folder_name}/{file_name}'
+            file = File.open_binary(conn, file_url)
+            return file.content
+        except Exception as e:
+            raise Exception(f"Erro ao baixar arquivo {file_name}: {str(e)}")
 
     def upload_file(self, file_name, folder_name, content):
         conn = self._auth()
@@ -57,6 +59,21 @@ class SharePoint:
         response = target_folder.upload_file(file_name, content).execute_query()
         return response
 
+    def test_connection(self):
+        """Testa a conexão com o SharePoint"""
+        try:
+            conn = self._auth()
+            # Tenta acessar informações básicas do site
+            web = conn.web.get().execute_query()
+            return True, f"Conexão bem-sucedida com: {web.title}"
+        except Exception as e:
+            return False, f"Erro na conexão: {str(e)}"
+
 # Exportar a classe SharePoint
 __all__ = ['SharePoint']
+
+
+# Após a linha 24, adicionar validação:
+if not all([username, password, sharepoint_site, sharepoint_site_name, sharepoint_doc]):
+    raise ValueError("Credenciais do SharePoint não foram configuradas corretamente. Verifique o arquivo .env ou st.secrets.")
                 
