@@ -458,7 +458,25 @@ def criar_configuracoes():
     if st.button("💾 Salvar Configurações"):
         st.success("Configurações salvas com sucesso!")
 
-
+# Rodapé com copyright
+st.sidebar.markdown("""
+    <style>
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #f0f0f0;
+        color: #333;
+        text-align: center;
+        padding: 10px;
+        font-size: 14px;
+    }
+    </style>
+    <div class="footer">
+        © 2025 FP&A e Orçamento - Rede Lius. Todos os direitos reservados.
+    </div>
+    """, unsafe_allow_html=True)
 
 
 
