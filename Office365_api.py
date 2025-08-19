@@ -71,9 +71,3 @@ class SharePoint:
 
 # Exportar a classe SharePoint
 __all__ = ['SharePoint']
-
-
-# Após a linha 24, adicionar validação:
-if not all([username, password, sharepoint_site, sharepoint_site_name, sharepoint_doc]):
-    raise ValueError("Credenciais do SharePoint não foram configuradas corretamente. Verifique o arquivo .env ou st.secrets.")
-                
