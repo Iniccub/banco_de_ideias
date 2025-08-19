@@ -12,11 +12,11 @@ load_dotenv()
 # Tenta obter as credenciais do st.secrets (Streamlit Cloud) ou do .env (ambiente local)
 try:
     # Tenta usar st.secrets (Streamlit Cloud)
-    username = "felipe@redelius.com.br"
-    password = "SlowDominusKey21*%"
-    sharepoint_site = "https://csasic.sharepoint.com/sites/DadosControladoria"
-    sharepoint_site_name = "DadosControladoria"
-    sharepoint_doc = "Documentos Partilhados"
+    username = st.secrets["sharepoint_email"]
+    password = st.secrets["sharepoint_password"]
+    sharepoint_site = st.secrets["sharepoint_url_site"]
+    sharepoint_site_name = st.secrets["sharepoint_site_name"]
+    sharepoint_doc = st.secrets["sharepoint_doc_library"]
 except (KeyError, AttributeError):
     # Fallback para variáveis de ambiente locais (.env)
     username = os.getenv("sharepoint_email")
