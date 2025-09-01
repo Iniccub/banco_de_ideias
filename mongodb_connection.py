@@ -6,13 +6,22 @@ from bson import ObjectId
 
 class MongoDBManager:
     def __init__(self):
-        # Configuração da conexão MongoDB
-        self.connection_string = self._get_connection_string()
-        self.database_name = self._get_database_name()
-        self.collection_name = self._get_collection_name()
+        # Não inicializa as credenciais no __init__
+        self.connection_string = None
+        self.database_name = None
+        self.collection_name = None
         self.client = None
         self.db = None
         self.collection = None
+        self._initialized = False
+        
+    def _initialize(self):
+        """Inicializa as configurações apenas quando necessário"""
+        if not self._initialized:
+            self.connection_string = self._get_connection_string()
+            self.database_name = self._get_database_name()
+            self.collection_name = self._get_collection_name()
+            self._initialized = True
         
     def _get_connection_string(self) -> str:
         """Obtém a string de conexão do MongoDB dos segredos do Streamlit"""
@@ -51,68 +60,66 @@ class MongoDBManager:
             return "banco_ideias"
     
     def connect(self) -> bool:
-        """Estabelece conexão com MongoDB"""
+        """Conecta ao MongoDB"""
         try:
-            # Adicionar timeout para evitar travamento
-            self.client = pymongo.MongoClient(
-                self.connection_string,
-                serverSelectionTimeoutMS=5000,  # 5 segundos de timeout
-                connectTimeoutMS=5000
-            )
-            self.db = self.client[self.database_name]
-            self.collection = self.db[self.collection_name]
+            # Inicializa as configurações se necessário
+            self._initialize()
+            
+            if self.client is None:
+                self.client = pymongo.MongoClient(self.connection_string)
+                self.db = self.client[self.database_name]
+                self.collection = self.db[self.collection_name]
             
             # Testa a conexão
             self.client.admin.command('ping')
-            st.success(f"✅ Conectado ao MongoDB: {self.database_name}.{self.collection_name}")
             return True
+            
         except Exception as e:
-            st.error(f"❌ Erro ao conectar com MongoDB: {e}")
-            # Garantir que as variáveis sejam None em caso de erro
-            self.client = None
-            self.db = None
-            self.collection = None
+            st.error(f"❌ Erro ao conectar ao MongoDB: {e}")
             return False
     
     def salvar_ideia(self, ideia_data: Dict) -> Optional[str]:
-        """Salva uma nova ideia no banco de dados"""
+        """Salva uma nova ideia no MongoDB"""
         try:
             if self.collection is None:
-                st.info("🔄 Tentando conectar ao MongoDB...")
                 if not self.connect():
-                    st.error("❌ Não foi possível conectar ao MongoDB")
                     return None
             
-            # Adiciona timestamp
-            ideia_data['data_criacao'] = datetime.now()
-            ideia_data['data_atualizacao'] = datetime.now()
+            # Adiciona timestamp se não existir
+            if 'data_criacao' not in ideia_data:
+                ideia_data['data_criacao'] = datetime.now()
             
-            # Insere no banco
-            result = self.collection.insert_one(ideia_data)
-            return str(result.inserted_id)
-        
+            # Insere o documento
+            resultado = self.collection.insert_one(ideia_data)
+            return str(resultado.inserted_id)
+            
         except Exception as e:
-            st.error(f"Erro ao salvar ideia: {e}")
+            st.error(f"❌ Erro ao salvar ideia: {e}")
             return None
     
     def buscar_ideias(self, filtros: Dict = None) -> List[Dict]:
-        """Busca ideias no banco de dados"""
+        """Busca ideias no MongoDB com filtros opcionais"""
         try:
             if self.collection is None:
-                st.info("🔄 Tentando conectar ao MongoDB...")
                 if not self.connect():
-                    st.warning("⚠️ Não foi possível conectar ao MongoDB. Nenhuma ideia será exibida.")
                     return []
             
-            if filtros:
-                cursor = self.collection.find(filtros)
-            else:
-                cursor = self.collection.find()
+            if filtros is None:
+                filtros = {}
             
-            return list(cursor.sort("data_criacao", -1))
-        
+            # Busca os documentos
+            cursor = self.collection.find(filtros).sort("data_criacao", -1)
+            ideias = list(cursor)
+            
+            # Converte ObjectId para string para compatibilidade
+            for ideia in ideias:
+                if '_id' in ideia:
+                    ideia['_id'] = str(ideia['_id'])
+            
+            return ideias
+            
         except Exception as e:
-            st.error(f"Erro ao buscar ideias: {e}")
+            st.error(f"❌ Erro ao buscar ideias: {e}")
             return []
     
     def atualizar_ideia(self, ideia_id: str, novos_dados: Dict) -> bool:
@@ -120,35 +127,35 @@ class MongoDBManager:
         try:
             if self.collection is None:
                 if not self.connect():
-                    st.error("❌ Não foi possível conectar ao MongoDB")
                     return False
             
+            # Adiciona timestamp de atualização
             novos_dados['data_atualizacao'] = datetime.now()
             
-            result = self.collection.update_one(
-                {"_id": ObjectId(ideia_id)},  # Usar ObjectId sem pymongo.
+            # Atualiza o documento
+            resultado = self.collection.update_one(
+                {"_id": ObjectId(ideia_id)},
                 {"$set": novos_dados}
             )
             
-            return result.modified_count > 0
-        
+            return resultado.modified_count > 0
+            
         except Exception as e:
-            st.error(f"Erro ao atualizar ideia: {e}")
+            st.error(f"❌ Erro ao atualizar ideia: {e}")
             return False
     
     def deletar_ideia(self, ideia_id: str) -> bool:
-        """Deleta uma ideia do banco de dados"""
+        """Deleta uma ideia"""
         try:
             if self.collection is None:
                 if not self.connect():
-                    st.error("❌ Não foi possível conectar ao MongoDB")
                     return False
             
-            result = self.collection.delete_one({"_id": ObjectId(ideia_id)})  # Usar ObjectId sem pymongo.
-            return result.deleted_count > 0
-        
+            resultado = self.collection.delete_one({"_id": ObjectId(ideia_id)})
+            return resultado.deleted_count > 0
+            
         except Exception as e:
-            st.error(f"Erro ao deletar ideia: {e}")
+            st.error(f"❌ Erro ao deletar ideia: {e}")
             return False
     
     def contar_ideias(self) -> int:
@@ -157,60 +164,42 @@ class MongoDBManager:
             if self.collection is None:
                 if not self.connect():
                     return 0
+            
             return self.collection.count_documents({})
+            
         except Exception as e:
-            st.error(f"Erro ao contar ideias: {e}")
+            st.error(f"❌ Erro ao contar ideias: {e}")
             return 0
     
     def obter_estatisticas(self) -> Dict:
-        """Obtém estatísticas do banco de ideias"""
+        """Obtém estatísticas das ideias"""
         try:
             if self.collection is None:
                 if not self.connect():
-                    return {"total_ideias": 0, "ideias_por_categoria": {}}
+                    return {}
             
             pipeline = [
                 {
                     "$group": {
                         "_id": "$categoria",
-                        "count": {"$sum": 1}
+                        "total": {"$sum": 1}
                     }
                 }
             ]
             
-            categorias = list(self.collection.aggregate(pipeline))
+            resultado = list(self.collection.aggregate(pipeline))
+            return {item["_id"]: item["total"] for item in resultado}
             
-            return {
-                "total_ideias": self.contar_ideias(),
-                "ideias_por_categoria": {item["_id"]: item["count"] for item in categorias}
-            }
-        
         except Exception as e:
-            st.error(f"Erro ao obter estatísticas: {e}")
-            return {"total_ideias": 0, "ideias_por_categoria": {}}
-
+            st.error(f"❌ Erro ao obter estatísticas: {e}")
+            return {}
+    
     def testar_conexao(self) -> bool:
-        """Testa a conexão com MongoDB sem salvar no Streamlit"""
+        """Testa a conexão com o MongoDB"""
         try:
-            if self.collection is None:
-                return self.connect()
-            
-            # Testa se a conexão ainda está ativa
-            self.client.admin.command('ping')
-            return True
+            return self.connect()
         except Exception:
             return False
-
-# Instância global do gerenciador
-mongo_manager = MongoDBManager()
-
-# Teste de conexão na inicialização (opcional)
-if __name__ == "__main__":
-    print("Testando conexão MongoDB...")
-    if mongo_manager.testar_conexao():
-        print("✅ Conexão bem-sucedida!")
-    else:
-        print("❌ Falha na conexão!")
     
     def buscar_ideia_por_id(self, ideia_id: str) -> Optional[Dict]:
         """Busca uma ideia específica pelo ID"""
@@ -219,7 +208,31 @@ if __name__ == "__main__":
                 if not self.connect():
                     return None
             
-            return self.collection.find_one({"_id": ObjectId(ideia_id)})
+            ideia = self.collection.find_one({"_id": ObjectId(ideia_id)})
+            if ideia and '_id' in ideia:
+                ideia['_id'] = str(ideia['_id'])
+            return ideia
         
         except Exception as e:
             st.error(f"Erro ao buscar ideia: {e}")
+            return None
+
+# Função para obter a instância do gerenciador (lazy loading)
+def get_mongo_manager():
+    """Retorna a instância do MongoDB Manager"""
+    global _mongo_manager_instance
+    if '_mongo_manager_instance' not in globals():
+        _mongo_manager_instance = MongoDBManager()
+    return _mongo_manager_instance
+
+# Para compatibilidade com código existente
+mongo_manager = get_mongo_manager()
+
+# Teste de conexão apenas quando executado diretamente
+if __name__ == "__main__":
+    print("Testando conexão MongoDB...")
+    manager = MongoDBManager()
+    if manager.testar_conexao():
+        print("✅ Conexão bem-sucedida!")
+    else:
+        print("❌ Falha na conexão!")
