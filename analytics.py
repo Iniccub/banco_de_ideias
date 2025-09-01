@@ -2,13 +2,20 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from collections import Counter
 import re
 from datetime import datetime, timedelta
 from mongodb_connection import mongo_manager
 import numpy as np
+
+# Importação opcional da WordCloud
+try:
+    from wordcloud import WordCloud
+    WORDCLOUD_AVAILABLE = True
+except ImportError:
+    WORDCLOUD_AVAILABLE = False
+    st.warning("⚠️ WordCloud não está instalada. Instale com: pip install wordcloud")
 
 def criar_dashboard_analytics():
     st.header("📊 Dashboard de Analytics - Banco de Ideias")
