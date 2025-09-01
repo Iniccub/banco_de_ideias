@@ -1,13 +1,8 @@
 import pymongo
 import streamlit as st
 from datetime import datetime
-import os
 from typing import Dict, List, Optional
-from dotenv import load_dotenv
-from bson import ObjectId  # Adicionar esta linha
-
-# Carrega as variáveis do arquivo .env
-load_dotenv()
+from bson import ObjectId
 
 class MongoDBManager:
     def __init__(self):
@@ -32,30 +27,28 @@ class MongoDBManager:
             return connection_string
             
         except KeyError as e:
-            st.error(f"❌ Credencial MongoDB não encontrada nos segredos: {e}")
-            # Fallback para variáveis de ambiente se os segredos não estiverem disponíveis
-            connection_string = os.getenv("MONGODB_CONNECTION_STRING")
-            if not connection_string:
-                st.error("❌ MONGODB_CONNECTION_STRING não encontrada no arquivo .env")
-                return "mongodb://localhost:27017/"
-            return connection_string
+            st.error(f"❌ Credencial MongoDB não encontrada nos segredos do Streamlit: {e}")
+            st.error("❌ Verifique se as credenciais estão configuradas em .streamlit/secrets.toml")
+            raise ValueError(f"Credenciais MongoDB não configuradas: {e}")
         except Exception as e:
             st.error(f"❌ Erro ao obter credenciais do MongoDB: {e}")
-            return "mongodb://localhost:27017/"
+            raise ValueError(f"Erro nas credenciais MongoDB: {e}")
     
     def _get_database_name(self) -> str:
-        """Obtém o nome do banco de dados dos segredos do Streamlit ou arquivo .env"""
+        """Obtém o nome do banco de dados dos segredos do Streamlit"""
         try:
             return st.secrets["mongodb"].get("database_name", "ideias")
-        except:
-            return os.getenv("MONGODB_DATABASE_NAME", "ideias")
+        except KeyError:
+            st.warning("⚠️ Nome do banco não encontrado nos segredos, usando padrão: 'ideias'")
+            return "ideias"
     
     def _get_collection_name(self) -> str:
-        """Obtém o nome da coleção dos segredos do Streamlit ou arquivo .env"""
+        """Obtém o nome da coleção dos segredos do Streamlit"""
         try:
             return st.secrets["mongodb"].get("collection_name", "banco_ideias")
-        except:
-            return os.getenv("MONGODB_COLLECTION_NAME", "banco_ideias")
+        except KeyError:
+            st.warning("⚠️ Nome da coleção não encontrado nos segredos, usando padrão: 'banco_ideias'")
+            return "banco_ideias"
     
     def connect(self) -> bool:
         """Estabelece conexão com MongoDB"""
