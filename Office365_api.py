@@ -4,48 +4,68 @@ from office365.sharepoint.client_context import ClientContext
 from office365.runtime.auth.user_credential import UserCredential
 from office365.sharepoint.files.file import File
 
-# Obter as credenciais do st.secrets (Streamlit Cloud)
-try:
-    username = st.secrets["sharepoint_email"]
-    password = st.secrets["sharepoint_password"]
-    sharepoint_site = st.secrets["sharepoint_url_site"]
-    sharepoint_site_name = st.secrets["sharepoint_site_name"]
-    sharepoint_doc = st.secrets["sharepoint_doc_library"]
-except KeyError as e:
-    raise ValueError(f"Credencial do SharePoint não encontrada no st.secrets: {e}")
-
 class SharePoint:
     def __init__(self):
-        """Inicializa a classe e valida as credenciais"""
-        if not all([username, password, sharepoint_site, sharepoint_site_name, sharepoint_doc]):
-            raise ValueError("Credenciais do SharePoint não foram configuradas corretamente no st.secrets.")
+        """Inicializa a classe e obtém as credenciais do st.secrets"""
+        self._load_credentials()
+    
+    def _load_credentials(self):
+        """Carrega as credenciais do SharePoint dos segredos do Streamlit"""
+        try:
+            self.username = st.secrets["sharepoint_email"]
+            self.password = st.secrets["sharepoint_password"]
+            self.sharepoint_site = st.secrets["sharepoint_url_site"]
+            self.sharepoint_site_name = st.secrets["sharepoint_site_name"]
+            self.sharepoint_doc = st.secrets["sharepoint_doc_library"]
+            
+            # Valida se todas as credenciais foram fornecidas
+            if not all([self.username, self.password, self.sharepoint_site, 
+                       self.sharepoint_site_name, self.sharepoint_doc]):
+                raise ValueError("Uma ou mais credenciais do SharePoint estão vazias")
+                
+        except KeyError as e:
+            st.error(f"❌ Credencial do SharePoint não encontrada no st.secrets: {e}")
+            st.error("❌ Verifique se as credenciais estão configuradas em .streamlit/secrets.toml")
+            raise ValueError(f"Credencial do SharePoint não encontrada: {e}")
+        except Exception as e:
+            st.error(f"❌ Erro ao carregar credenciais do SharePoint: {e}")
+            raise ValueError(f"Erro nas credenciais do SharePoint: {e}")
     
     def _auth(self):
-        conn = ClientContext(sharepoint_site).with_credentials(
-            UserCredential(
-                username,
-                password
+        """Autentica no SharePoint"""
+        try:
+            conn = ClientContext(self.sharepoint_site).with_credentials(
+                UserCredential(
+                    self.username,
+                    self.password
+                )
             )
-        )
-        return conn
+            return conn
+        except Exception as e:
+            st.error(f"❌ Erro na autenticação do SharePoint: {e}")
+            raise
 
     def _get_files_list(self, folder_name):
+        """Obtém lista de arquivos de uma pasta"""
         conn = self._auth()
-        target_folder_url = f'/sites/{sharepoint_site_name}/{sharepoint_doc}/{folder_name}'
+        target_folder_url = f'/sites/{self.sharepoint_site_name}/{self.sharepoint_doc}/{folder_name}'
         root_folder = conn.web.get_folder_by_server_relative_url(target_folder_url)
         root_folder.expand(['Files', 'Folders']).get().execute_query()
         return root_folder.files
 
     def download_file(self, file_name, folder_name):
+        """Baixa um arquivo do SharePoint"""
         try:
             conn = self._auth()
-            file_url = f'/sites/{sharepoint_site_name}/{sharepoint_doc}/{folder_name}/{file_name}'
+            file_url = f'/sites/{self.sharepoint_site_name}/{self.sharepoint_doc}/{folder_name}/{file_name}'
             file = File.open_binary(conn, file_url)
             return file.content
         except Exception as e:
+            st.error(f"❌ Erro ao baixar arquivo {file_name}: {str(e)}")
             raise Exception(f"Erro ao baixar arquivo {file_name}: {str(e)}")
 
     def upload_file(self, file_name, folder_name, content):
+        """Faz upload de um arquivo para o SharePoint"""
         try:
             conn = self._auth()
             target_folder_url = f'/sites/{sharepoint_site_name}/{sharepoint_doc}/{folder_name}'
