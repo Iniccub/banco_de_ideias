@@ -12,12 +12,12 @@ class SharePoint:
     def _load_credentials(self):
         """Carrega as credenciais do SharePoint dos segredos do Streamlit"""
         try:
-            # Busca as credenciais usando a estrutura do TOML fornecida
-            self.username = st.secrets["sharepoint_email"]
-            self.password = st.secrets["sharepoint_password"]
-            self.sharepoint_site = st.secrets["sharepoint_url_site"]
-            self.sharepoint_site_name = st.secrets["sharepoint_site_name"]
-            self.sharepoint_doc = st.secrets["sharepoint_doc_library"]
+            # Busca as credenciais da seção [sharepoint] do TOML
+            self.username = st.secrets["sharepoint"]["sharepoint_email"]
+            self.password = st.secrets["sharepoint"]["sharepoint_password"]
+            self.sharepoint_site = st.secrets["sharepoint"]["sharepoint_url_site"]
+            self.sharepoint_site_name = st.secrets["sharepoint"]["sharepoint_site_name"]
+            self.sharepoint_doc = st.secrets["sharepoint"]["sharepoint_doc_library"]
             
             # Valida se todas as credenciais foram fornecidas
             if not all([self.username, self.password, self.sharepoint_site, 
@@ -27,6 +27,7 @@ class SharePoint:
         except KeyError as e:
             st.error(f"❌ Credencial do SharePoint não encontrada no st.secrets: {e}")
             st.error("❌ Verifique se as credenciais estão configuradas em .streamlit/secrets.toml")
+            st.error("❌ Certifique-se de que as credenciais estão na seção [sharepoint]")
             raise ValueError(f"Credencial do SharePoint não encontrada: {e}")
         except Exception as e:
             st.error(f"❌ Erro ao carregar credenciais do SharePoint: {e}")
