@@ -70,7 +70,7 @@ class SharePoint:
         """Faz upload de um arquivo para o SharePoint"""
         try:
             conn = self._auth()
-            target_folder_url = f'/sites/{sharepoint_site_name}/{sharepoint_doc}/{folder_name}'
+            target_folder_url = f'/sites/{self.sharepoint_site_name}/{self.sharepoint_doc}/{folder_name}'
             target_folder = conn.web.get_folder_by_server_relative_path(target_folder_url)
             response = target_folder.upload_file(file_name, content).execute_query()
             return response
@@ -86,7 +86,7 @@ class SharePoint:
             web = conn.web.get().execute_query()
             
             # Teste 2: Verificar biblioteca específica
-            target_lib = conn.web.lists.get_by_title(sharepoint_doc)
+            target_lib = conn.web.lists.get_by_title(self.sharepoint_doc)
             target_lib.get().execute_query()
             
             return True, f"Conexão bem-sucedida com: {web.title}"
