@@ -155,28 +155,22 @@ def main():
         criar_dashboard_analytics()
     
     elif pagina_selecionada == "☁️ Análise de Texto":
-        st.header("☁️ Análise de Texto", divider="green")
         criar_analise_texto()
     
     elif pagina_selecionada == "📋 Controle de Ideias":
-        st.header("📋 Controle de Ideias", divider="red")
         criar_sistema_controle()
     
     elif pagina_selecionada == "🎮 Gamificação":
-        st.header("🎮 Sistema de Gamificação", divider="violet")
         criar_sistema_gamificacao()
     
     elif pagina_selecionada == "🔔 Notificações":
-        st.header("🔔 Sistema de Notificações", divider="orange")
         criar_sistema_notificacoes()
     
     elif pagina_selecionada == "🤖 Análise IA":
-        st.header("🤖 Análise com IA", divider="rainbow")
         from ia_analysis import criar_analise_ia
         criar_analise_ia()
     
     elif pagina_selecionada == "📋 Listar Ideias":
-        st.header("📋 Lista de Ideias", divider="blue")
         listar_ideias()
         
         st.write("---")
