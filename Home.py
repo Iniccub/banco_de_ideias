@@ -16,6 +16,7 @@ from gamificacao import criar_sistema_gamificacao
 from notificacoes import criar_sistema_notificacoes
 from cadastro_ideias import criar_formulario_ideia, listar_ideias
 from mongodb_connection import mongo_manager
+from auth import auth_manager  # Nova importação
 
 # Configuração da página
 st.set_page_config(
@@ -131,9 +132,13 @@ def main():
     # Sistema de navegação
     pagina_selecionada = criar_navegacao()
     
+    # Verificar autenticação para páginas restritas
+    if not auth_manager.require_auth(pagina_selecionada):
+        return  # Para a execução se não autenticado
+    
     # Roteamento baseado na página selecionada
     if pagina_selecionada == "🏠 Enviar Ideia":
-        # Código original do formulário
+        # Código original do formulário (acesso livre)
         st.header("BANCO DE IDEIAS e BOAS PRÁTICAS - REDE LIUS", divider="orange")
         st.write("""Ferramenta de registro e acompanhamento de ideias e boas práticas institucionais da Rede Lius""")
         
@@ -147,26 +152,33 @@ def main():
         criar_formulario_ideia()
     
     elif pagina_selecionada == "📊 Dashboard":
+        st.header("📊 Dashboard Analytics", divider="blue")
         criar_dashboard_analytics()
     
     elif pagina_selecionada == "☁️ Análise de Texto":
+        st.header("☁️ Análise de Texto", divider="green")
         criar_analise_texto()
     
     elif pagina_selecionada == "📋 Controle de Ideias":
+        st.header("📋 Controle de Ideias", divider="red")
         criar_sistema_controle()
     
     elif pagina_selecionada == "🎮 Gamificação":
+        st.header("🎮 Sistema de Gamificação", divider="violet")
         criar_sistema_gamificacao()
     
     elif pagina_selecionada == "🔔 Notificações":
+        st.header("🔔 Sistema de Notificações", divider="orange")
         criar_sistema_notificacoes()
     
     elif pagina_selecionada == "🤖 Análise IA":
+        st.header("🤖 Análise com IA", divider="rainbow")
         from ia_analysis import criar_analise_ia
         criar_analise_ia()
     
     elif pagina_selecionada == "📋 Listar Ideias":
-        listar_ideias()  # Do cadastro_ideias.py
+        st.header("📋 Lista de Ideias", divider="blue")
+        listar_ideias()
         
         st.write("---")
         st.write("Status da conexão:")
