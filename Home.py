@@ -152,7 +152,6 @@ def main():
         criar_formulario_ideia()
     
     elif pagina_selecionada == "📊 Dashboard":
-        st.header("📊 Dashboard Analytics", divider="blue")
         criar_dashboard_analytics()
     
     elif pagina_selecionada == "☁️ Análise de Texto":

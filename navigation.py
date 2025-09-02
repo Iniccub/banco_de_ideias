@@ -4,7 +4,7 @@ from auth import auth_manager
 def criar_navegacao():
     # Menu lateral com páginas
     with st.sidebar:
-        st.image("LOGO BIP.png", width=230)
+        st.image("ICON BIP.PNG", width=230)
         
         # Seção de autenticação
         st.markdown("---")
