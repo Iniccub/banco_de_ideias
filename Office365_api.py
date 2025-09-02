@@ -12,6 +12,7 @@ class SharePoint:
     def _load_credentials(self):
         """Carrega as credenciais do SharePoint dos segredos do Streamlit"""
         try:
+            # Busca as credenciais usando a estrutura do TOML fornecida
             self.username = st.secrets["sharepoint_email"]
             self.password = st.secrets["sharepoint_password"]
             self.sharepoint_site = st.secrets["sharepoint_url_site"]
@@ -30,7 +31,7 @@ class SharePoint:
         except Exception as e:
             st.error(f"❌ Erro ao carregar credenciais do SharePoint: {e}")
             raise ValueError(f"Erro nas credenciais do SharePoint: {e}")
-    
+
     def _auth(self):
         """Autentica no SharePoint"""
         try:

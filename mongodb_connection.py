@@ -26,13 +26,8 @@ class MongoDBManager:
     def _get_connection_string(self) -> str:
         """Obtém a string de conexão do MongoDB dos segredos do Streamlit"""
         try:
-            # Busca as credenciais dos segredos do Streamlit
-            username = st.secrets["mongodb"]["username"]
-            password = st.secrets["mongodb"]["password"]
-            cluster_url = st.secrets["mongodb"]["cluster_url"]
-            
-            # Constrói a string de conexão
-            connection_string = f"mongodb+srv://{username}:{password}@{cluster_url}/?retryWrites=true&w=majority"
+            # Busca a string de conexão diretamente do TOML
+            connection_string = st.secrets["mongodb"]["MONGODB_CONNECTION_STRING"]
             return connection_string
             
         except KeyError as e:
@@ -46,18 +41,16 @@ class MongoDBManager:
     def _get_database_name(self) -> str:
         """Obtém o nome do banco de dados dos segredos do Streamlit"""
         try:
-            return st.secrets["mongodb"].get("database_name", "ideias")
+            return st.secrets["mongodb"]["MONGODB_DATABASE_NAME"]
         except KeyError:
-            st.warning("⚠️ Nome do banco não encontrado nos segredos, usando padrão: 'ideias'")
-            return "ideias"
+            return "ideias"  # valor padrão
     
     def _get_collection_name(self) -> str:
         """Obtém o nome da coleção dos segredos do Streamlit"""
         try:
-            return st.secrets["mongodb"].get("collection_name", "banco_ideias")
+            return st.secrets["mongodb"]["MONGODB_COLLECTION_NAME"]
         except KeyError:
-            st.warning("⚠️ Nome da coleção não encontrado nos segredos, usando padrão: 'banco_ideias'")
-            return "banco_ideias"
+            return "banco_ideias"  # valor padrão
     
     def connect(self) -> bool:
         """Conecta ao MongoDB"""
